@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { DESIGN_HTML, DESIGN_KEYFRAMES } from "./design";
 import ProfileCard from "./ProfileCard";
+import { RankSection } from "./RankSection";
 
 // Avatar for the hero ProfileCard. Remote portrait; degrades gracefully via
 // the component's onError handler if it can't load.
@@ -201,6 +202,7 @@ export function VouchLanding() {
         strategy="afterInteractive"
       />
       <div ref={ref} dangerouslySetInnerHTML={{ __html: DESIGN_HTML }} />
+      <RankSection />
     </>
   );
 }
