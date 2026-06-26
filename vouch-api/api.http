@@ -4,6 +4,9 @@
 
 @baseUrl = http://localhost:8080/api/v1
 @token = PASTE_ACCESS_TOKEN_HERE
+@refreshToken = PASTE_REFRESH_TOKEN_HERE
+@companyToken = PASTE_COMPANY_TOKEN_HERE
+@companyRefreshToken = PASTE_COMPANY_REFRESH_TOKEN_HERE
 @projectId = PASTE_PROJECT_ID
 @problemId = PASTE_PROBLEM_ID
 @username = ada
@@ -23,7 +26,55 @@ Content-Type: application/json
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
 
-{ "refresh_token": "PASTE_REFRESH_TOKEN" }
+{ "refresh_token": "{{refreshToken}}" }
+
+### Logout (revoke refresh token)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "refresh_token": "{{refreshToken}}" }
+
+### Get own profile
+GET {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+
+### --- Companies ---
+
+### Register
+POST {{baseUrl}}/companies/register
+Content-Type: application/json
+
+{
+  "name": "Acme Corp",
+  "email": "hiring@acme.com",
+  "password": "S3cur3P@ssw0rd!",
+  "website": "https://acme.com",
+  "size": "medium"
+}
+
+### Login
+POST {{baseUrl}}/companies/login
+Content-Type: application/json
+
+{ "email": "hiring@acme.com", "password": "S3cur3P@ssw0rd!" }
+
+### Refresh company tokens
+POST {{baseUrl}}/companies/refresh
+Content-Type: application/json
+
+{ "refresh_token": "{{companyRefreshToken}}" }
+
+### Company logout
+POST {{baseUrl}}/companies/logout
+Authorization: Bearer {{companyToken}}
+Content-Type: application/json
+
+{ "refresh_token": "{{companyRefreshToken}}" }
+
+### Get company profile
+GET {{baseUrl}}/companies/me
+Authorization: Bearer {{companyToken}}
 
 ### --- Users ---
 
