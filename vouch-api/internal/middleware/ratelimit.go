@@ -25,6 +25,8 @@ func NewRateLimiter(rdb *redis.Client, limit int, window time.Duration) *RateLim
 
 // Limit returns middleware enforcing the rate limit, keyed by authenticated
 // user id when present, otherwise by client IP.
+// It also sets X-RateLimit-Limit and X-RateLimit-Remaining response headers
+// so clients can back off gracefully.
 func (rl *RateLimiter) Limit() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id := UserID(c)
@@ -42,8 +44,17 @@ func (rl *RateLimiter) Limit() fiber.Handler {
 			return c.Next()
 		}
 		if count == 1 {
-			rl.rdb.Expire(ctx, key, rl.window)
+			rl.rdb.Expire(ctx, key, rl.window) //nolint:errcheck
 		}
+
+		remaining := int64(rl.limit) - count
+		if remaining < 0 {
+			remaining = 0
+		}
+		c.Set("X-RateLimit-Limit", fmt.Sprintf("%d", rl.limit))
+		c.Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+		c.Set("X-RateLimit-Reset", fmt.Sprintf("%d", time.Now().Add(rl.window).Unix()))
+
 		if count > int64(rl.limit) {
 			c.Set("Retry-After", fmt.Sprintf("%.0f", rl.window.Seconds()))
 			return response.Error(c, fiber.StatusTooManyRequests, "rate_limited", "too many requests")
