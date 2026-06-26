@@ -115,19 +115,19 @@ export default function ProjectDetailPage({
               </div>
               <p className="mt-1 text-sm text-ink/70">{project.tagline}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {project.live_url && (
+                {project.live_url && /^https?:\/\//.test(project.live_url) && (
                   <a href={project.live_url} target="_blank" rel="noopener noreferrer"
                     className="text-xs border border-line rounded-full px-3 py-1 hover:border-accent">
                     Live site ↗
                   </a>
                 )}
-                {project.repo_url && (
+                {project.repo_url && /^https?:\/\//.test(project.repo_url) && (
                   <a href={project.repo_url} target="_blank" rel="noopener noreferrer"
                     className="text-xs border border-line rounded-full px-3 py-1 hover:border-accent">
                     Repo ↗
                   </a>
                 )}
-                {project.payment_link && (
+                {project.payment_link && /^https?:\/\//.test(project.payment_link) && (
                   <a href={project.payment_link} target="_blank" rel="noopener noreferrer"
                     className="btn-primary text-xs">
                     Buy / Subscribe
@@ -201,7 +201,7 @@ export default function ProjectDetailPage({
           <div className="card border-accent/40">
             <p className="text-xs font-mono text-accent uppercase tracking-wider">For sale</p>
             <p className="mt-1 text-2xl font-bold">{formatCurrency(project.ask_price)}</p>
-            {project.payment_link && (
+            {project.payment_link && /^https?:\/\//.test(project.payment_link) && (
               <a href={project.payment_link} target="_blank" rel="noopener noreferrer"
                 className="btn-primary mt-3 block text-center">
                 Make an offer

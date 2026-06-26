@@ -49,8 +49,8 @@ export default function BuilderProfilePage({
             <p className="mt-4 text-ink/80">{builder.bio}</p>
           )}
           <div className="mt-4 flex gap-4 text-sm text-ink/60">
-            {builder.website_url && (
-              <a href={builder.website_url} className="hover:text-crimson">
+            {builder.website_url && /^https?:\/\//.test(builder.website_url) && (
+              <a href={builder.website_url} target="_blank" rel="noopener noreferrer" className="hover:text-crimson">
                 Website
               </a>
             )}

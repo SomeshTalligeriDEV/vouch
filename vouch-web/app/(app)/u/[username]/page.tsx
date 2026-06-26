@@ -77,7 +77,7 @@ export default function BuilderProfilePage({ params }: Props) {
             {user.location && (
               <span className="text-xs text-muted-foreground">📍 {user.location}</span>
             )}
-            {user.website && (
+            {user.website && /^https?:\/\//.test(user.website) && (
               <a
                 href={user.website}
                 target="_blank"
