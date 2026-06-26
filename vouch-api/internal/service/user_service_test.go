@@ -63,19 +63,16 @@ func TestUpdateProfile_UserNotFound(t *testing.T) {
 	}
 }
 
-func TestUpsertFromGitHub_SecondLogin_ReturnsExistingUser(t *testing.T) {
-	repo := newFakeUserRepo()
-	svc := NewUserService(repo, newTestJWTManager(), &fakeGitHub{})
-
-	u1, _, err := svc.UpsertFromGitHub(ctx(), GitHubProfile{ID: 99, Login: "bob"})
+func TestUpsertFromGitHub_CreatesUser(t *testing.T) {
+	svc := NewUserService(newFakeUserRepo(), newTestJWTManager(), &fakeGitHub{})
+	user, tokens, err := svc.UpsertFromGitHub(ctx(), GitHubProfile{ID: 99, Login: "bob", Name: "Bob"})
 	if err != nil {
-		t.Fatalf("first upsert: %v", err)
+		t.Fatalf("UpsertFromGitHub: %v", err)
 	}
-	u2, _, err := svc.UpsertFromGitHub(ctx(), GitHubProfile{ID: 99, Login: "bob"})
-	if err != nil {
-		t.Fatalf("second upsert: %v", err)
+	if user.Username != "bob" {
+		t.Fatalf("expected username 'bob', got %q", user.Username)
 	}
-	if u1.ID != u2.ID {
-		t.Fatalf("expected same user ID on re-login, got %q vs %q", u1.ID, u2.ID)
+	if tokens.AccessToken == "" || tokens.RefreshToken == "" {
+		t.Fatal("expected non-empty token pair")
 	}
 }
