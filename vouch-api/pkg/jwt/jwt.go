@@ -12,11 +12,20 @@ const (
 	refreshTokenTTL = 30 * 24 * time.Hour
 )
 
+// SubjectType distinguishes whether the token belongs to a user or company.
+type SubjectType string
+
+const (
+	SubjectTypeUser    SubjectType = "user"
+	SubjectTypeCompany SubjectType = "company"
+)
+
 // Claims is the JWT payload Vouch issues.
 type Claims struct {
-	UserID   string `json:"uid"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	UserID      string      `json:"uid"`
+	Username    string      `json:"username"`
+	Role        string      `json:"role"`
+	SubjectType SubjectType `json:"stype"`
 	jwt.RegisteredClaims
 }
 
@@ -43,11 +52,16 @@ type TokenPair struct {
 
 // Generate issues a fresh access + refresh token pair for a user.
 func (m *Manager) Generate(userID, username, role string) (*TokenPair, error) {
-	access, err := m.sign(userID, username, role, m.accessSecret, accessTokenTTL)
+	return m.GenerateTyped(userID, username, role, SubjectTypeUser)
+}
+
+// GenerateTyped issues tokens with an explicit subject type (user or company).
+func (m *Manager) GenerateTyped(id, name, role string, stype SubjectType) (*TokenPair, error) {
+	access, err := m.sign(id, name, role, stype, m.accessSecret, accessTokenTTL)
 	if err != nil {
 		return nil, fmt.Errorf("jwt.Generate access: %w", err)
 	}
-	refresh, err := m.sign(userID, username, role, m.refreshSecret, refreshTokenTTL)
+	refresh, err := m.sign(id, name, role, stype, m.refreshSecret, refreshTokenTTL)
 	if err != nil {
 		return nil, fmt.Errorf("jwt.Generate refresh: %w", err)
 	}
@@ -58,14 +72,15 @@ func (m *Manager) Generate(userID, username, role string) (*TokenPair, error) {
 	}, nil
 }
 
-func (m *Manager) sign(userID, username, role string, secret []byte, ttl time.Duration) (string, error) {
+func (m *Manager) sign(id, name, role string, stype SubjectType, secret []byte, ttl time.Duration) (string, error) {
 	now := time.Now()
 	claims := Claims{
-		UserID:   userID,
-		Username: username,
-		Role:     role,
+		UserID:      id,
+		Username:    name,
+		Role:        role,
+		SubjectType: stype,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userID,
+			Subject:   id,
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
 			Issuer:    "vouch",

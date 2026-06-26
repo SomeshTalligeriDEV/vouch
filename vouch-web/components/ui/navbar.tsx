@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/store/auth";
 import { githubOAuthURL } from "@/lib/utils";
+import type { Company } from "@/types";
 
 function Logo() {
   return (
@@ -21,6 +23,12 @@ function Logo() {
 export function Navbar() {
   const user = useAuth((s) => s.user);
   const logout = useAuth((s) => s.logout);
+  const [company, setCompany] = useState<Company | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("vouch_company");
+    if (stored) { try { setCompany(JSON.parse(stored)); } catch { /* ignore */ } }
+  }, []);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur">
@@ -40,10 +48,26 @@ export function Navbar() {
             Demand
           </Link>
 
-          {user ? (
+          {company && !user ? (
             <>
-              <Link href="/dashboard" className="rounded-full px-3 py-2 hover:bg-ink/5">
+              <Link href="/company/dashboard" className="rounded-full px-3 py-2 hover:bg-ink/5">
                 Dashboard
+              </Link>
+              <span className="rounded-full px-3 py-2 text-ink/70">{company.name}</span>
+              <button
+                onClick={() => { localStorage.removeItem("vouch_company"); setCompany(null); }}
+                className="ml-1 rounded-full px-3 py-2 hover:bg-ink/5 text-ink/50"
+              >
+                Sign out
+              </button>
+            </>
+          ) : user ? (
+            <>
+              <Link
+                href={user.role === "admin" ? "/admin" : "/dashboard"}
+                className="rounded-full px-3 py-2 hover:bg-ink/5"
+              >
+                {user.role === "admin" ? "Admin" : "Dashboard"}
               </Link>
               <Link href="/profile" className="flex items-center gap-2 rounded-full px-3 py-2 hover:bg-ink/5">
                 {user.avatar_url && (
@@ -60,12 +84,17 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <a
-              href={githubOAuthURL()}
-              className="ml-2 rounded-full bg-accent px-4 py-2 font-bold text-ink shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
-            >
-              Sign in
-            </a>
+            <div className="flex items-center gap-2">
+              <Link href="/company/login" className="rounded-full px-3 py-2 hover:bg-ink/5 text-ink/60">
+                Company
+              </Link>
+              <a
+                href={githubOAuthURL()}
+                className="ml-1 rounded-full bg-accent px-4 py-2 font-bold text-ink shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
+              >
+                Sign in
+              </a>
+            </div>
           )}
         </div>
       </nav>

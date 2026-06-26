@@ -59,6 +59,8 @@ func (c *Client) EnsureIndexes(ctx context.Context) error {
 		{"reviews", mongo.IndexModel{Keys: bsonDoc("project_id", 1)}},
 		{"reviews", mongo.IndexModel{Keys: compoundKey("project_id", "reviewer_id"), Options: uniq}},
 		{"stripe_snapshots", mongo.IndexModel{Keys: bsonDoc("builder_id", 1)}},
+		{"companies", mongo.IndexModel{Keys: bsonDoc("email", 1), Options: uniq}},
+		{"companies", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq}},
 	}
 
 	for _, s := range specs {

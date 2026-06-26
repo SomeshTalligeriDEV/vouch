@@ -70,6 +70,7 @@ func main() {
 	problemRepo := repo.NewProblemRepo(mongoClient)
 	reviewRepo := repo.NewReviewRepo(mongoClient)
 	stripeRepo := repo.NewStripeRepo(mongoClient)
+	companyRepo := repo.NewCompanyRepo(mongoClient)
 
 	// External gateways
 	githubClient := external.NewGitHubClient(cfg.GitHubClientID, cfg.GitHubClientSecret, cfg.GitHubRedirectURL)
@@ -88,6 +89,8 @@ func main() {
 	reviewSvc := service.NewReviewService(reviewRepo, projectRepo, userRepo, enqueuer)
 	stripeSvc := service.NewStripeService(userRepo, stripeRepo, stripeClient, enqueuer)
 	uploadSvc := service.NewUploadService(r2Presigner)
+	companySvc := service.NewCompanyService(companyRepo, jwtMgr)
+	adminSvc := service.NewAdminService(userRepo, companyRepo, projectRepo, problemRepo, reviewRepo)
 
 	// HTTP
 	app := fiber.New(fiber.Config{
@@ -110,6 +113,8 @@ func main() {
 		Problem: handler.NewProblemHandler(problemSvc, val),
 		Review:  handler.NewReviewHandler(reviewSvc, val),
 		Upload:  handler.NewUploadHandler(uploadSvc, val),
+		Company: handler.NewCompanyHandler(companySvc, val),
+		Admin:   handler.NewAdminHandler(adminSvc),
 	}, handler.Deps{JWT: jwtMgr, Redis: rdb, Log: logger})
 
 	// Graceful shutdown

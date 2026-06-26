@@ -19,6 +19,8 @@ type Handlers struct {
 	Problem *ProblemHandler
 	Review  *ReviewHandler
 	Upload  *UploadHandler
+	Company *CompanyHandler
+	Admin   *AdminHandler
 }
 
 // Deps carries shared dependencies needed to register routes.
@@ -89,6 +91,20 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	// Uploads
 	uploads := v1.Group("/uploads")
 	uploads.Post("/presign", auth, mutationLimiter, h.Upload.Presign)
+
+	// Companies (email + password auth)
+	companies := v1.Group("/companies")
+	companies.Post("/register", authLimiter, h.Company.Register)
+	companies.Post("/login", authLimiter, h.Company.Login)
+	companies.Post("/refresh", authLimiter, h.Company.Refresh)
+	companies.Get("/me", auth, h.Company.GetMe)
+	companies.Patch("/me", auth, mutationLimiter, h.Company.UpdateMe)
+	companies.Get("/:slug", h.Company.GetBySlug)
+
+	// Admin (requires auth + admin role)
+	adminGrp := v1.Group("/admin", auth, middleware.RequireRole("admin"))
+	adminGrp.Get("/stats", h.Admin.Stats)
+	adminGrp.Get("/companies", h.Admin.ListCompanies)
 
 	// SSE — real-time streams (no auth required; score data is public)
 	sse := NewSSEHandler(d.Redis)

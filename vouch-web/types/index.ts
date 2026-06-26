@@ -123,3 +123,32 @@ export interface Paginated<T> {
   limit: number;
   total: number;
 }
+
+export type CompanySize = "1" | "2-10" | "11-50" | "51-200" | "200+";
+
+export interface Company {
+  id: string;
+  email: string;
+  name: string;
+  slug: string;
+  website: string;
+  logo_url: string;
+  description: string;
+  size: CompanySize;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompanyAuthResponse {
+  company: Company;
+  tokens: TokenPair;
+}
+
+export interface AdminStats {
+  total_users: number;
+  total_companies: number;
+  total_projects: number;
+  open_problems: number;
+  total_reviews: number;
+}

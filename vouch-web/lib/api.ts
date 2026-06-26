@@ -1,9 +1,12 @@
 // Typed API client. ALL fetch calls to vouch-api live here.
 
 import type {
+  AdminStats,
   ApiEnvelope,
   AuthResponse,
   BuilderScore,
+  Company,
+  CompanyAuthResponse,
   Paginated,
   Problem,
   Project,
@@ -228,6 +231,23 @@ export const api = {
     request<Problem>(`/problems/${id}/claim`, { method: "POST", auth: true }),
   upvoteProblem: (id: string) =>
     request<Problem>(`/problems/${id}/upvote`, { method: "POST", auth: true }),
+
+  // Companies
+  companyRegister: (input: { name: string; email: string; password: string; website?: string; size?: string }) =>
+    request<CompanyAuthResponse>("/companies/register", { method: "POST", body: input }),
+  companyLogin: (email: string, password: string) =>
+    request<CompanyAuthResponse>("/companies/login", { method: "POST", body: { email, password } }),
+  companyRefresh: (refresh_token: string) =>
+    request<TokenPair>("/companies/refresh", { method: "POST", body: { refresh_token } }),
+  getCompanyMe: () => request<Company>("/companies/me", { auth: true }),
+  updateCompanyMe: (input: Partial<Company>) =>
+    request<Company>("/companies/me", { method: "PATCH", body: input, auth: true }),
+  getCompanyBySlug: (slug: string) => request<Company>(`/companies/${slug}`),
+
+  // Admin
+  adminStats: () => request<AdminStats>("/admin/stats", { auth: true }),
+  adminListCompanies: (page = 1) =>
+    requestList<Company>("/admin/companies", { auth: true, query: { page } }),
 
   // Uploads
   presignUpload: (contentType: string) =>
