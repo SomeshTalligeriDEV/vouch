@@ -46,9 +46,8 @@ func TestRecalculate_EnqueuesScoreUpdate(t *testing.T) {
 
 func TestRecalculate_StripeMultiplierApplied(t *testing.T) {
 	stripe := &fakeStripeRepo{snap: &domain.StripeSnapshot{
-		BuilderID:      "u1",
-		StripeVerified: true,
-		MRR:            200,
+		BuilderID: "u1",
+		MRR:       200,
 	}}
 	users := newFakeUserRepo()
 	users.add(&domain.User{ID: "u1", Username: "alice"})
