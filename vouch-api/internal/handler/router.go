@@ -67,6 +67,7 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	authGrp := v1.Group("/auth")
 	authGrp.Post("/github", authLimiter, h.User.GitHubCallback)
 	authGrp.Post("/refresh", authLimiter, h.User.Refresh)
+	authGrp.Post("/logout", h.User.Logout)
 
 	companyOnly := middleware.RequireSubjectType("company")
 	userOnly := middleware.RequireSubjectType("user")
@@ -114,6 +115,7 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	companies.Post("/register", authLimiter, h.Company.Register)
 	companies.Post("/login", authLimiter, h.Company.Login)
 	companies.Post("/refresh", authLimiter, h.Company.Refresh)
+	companies.Post("/logout", h.Company.Logout)
 	companies.Get("/me", auth, companyOnly, h.Company.GetMe)
 	companies.Patch("/me", auth, companyOnly, mutationLimiter, h.Company.UpdateMe)
 	companies.Get("/:slug", h.Company.GetBySlug)

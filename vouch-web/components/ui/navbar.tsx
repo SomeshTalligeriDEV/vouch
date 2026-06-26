@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/store/auth";
-import { clearCompanyTokens } from "@/lib/auth";
+import { api } from "@/lib/api";
+import { clearCompanyTokens, getCompanyRefreshToken } from "@/lib/auth";
 import { githubOAuthURL } from "@/lib/utils";
 import type { Company } from "@/types";
 
@@ -56,7 +57,12 @@ export function Navbar() {
               </Link>
               <span className="rounded-full px-3 py-2 text-ink/70">{company.name}</span>
               <button
-                onClick={() => { clearCompanyTokens(); setCompany(null); }}
+                onClick={() => {
+                  const rt = getCompanyRefreshToken();
+                  if (rt) api.companyRefreshLogout(rt).catch(() => {/* best effort */});
+                  clearCompanyTokens();
+                  setCompany(null);
+                }}
                 className="ml-1 rounded-full px-3 py-2 hover:bg-ink/5 text-ink/50"
               >
                 Sign out

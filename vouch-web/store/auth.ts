@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { api, ApiError } from "@/lib/api";
-import { clearTokens, getAccessToken, storeTokens } from "@/lib/auth";
+import { clearTokens, getAccessToken, getRefreshToken, storeTokens } from "@/lib/auth";
 import type { User } from "@/types";
 
 interface AuthState {
@@ -50,6 +50,11 @@ export const useAuth = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    // Fire-and-forget server-side revocation — don't block the UI on it.
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      api.logout(refreshToken).catch(() => {/* best effort */});
+    }
     clearTokens();
     set({ user: null, status: "unauthenticated" });
   },

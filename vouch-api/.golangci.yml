@@ -1,0 +1,37 @@
+run:
+  timeout: 3m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - gofmt
+    - misspell
+    - bodyclose
+    - noctx
+    - exhaustive
+  disable:
+    - depguard
+    - gochecknoglobals
+
+linters-settings:
+  errcheck:
+    # Ignore errors on deferred Close and common fire-and-forget Redis publishes.
+    exclude-functions:
+      - (*github.com/redis/go-redis/v9.Client).Publish
+      - (*github.com/redis/go-redis/v9.Client).Expire
+      - (*bufio.Writer).Flush
+
+issues:
+  exclude-rules:
+    # Test files may use unexported types freely.
+    - path: "_test\\.go"
+      linters: [unused, errcheck]
+    # noctx fires on SSE streaming where we manage context manually.
+    - path: "sse_handler\\.go"
+      linters: [noctx]

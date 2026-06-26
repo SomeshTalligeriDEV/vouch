@@ -95,7 +95,7 @@ func (s *CompanyService) Login(ctx context.Context, email, password string) (*Co
 	return &CompanyAuthResponse{Company: c, Tokens: tokens}, nil
 }
 
-// Refresh issues new tokens for a company from a valid refresh token.
+// Refresh issues new tokens for a company, revoking the old refresh token (rotation).
 func (s *CompanyService) Refresh(ctx context.Context, refreshToken string) (*jwt.TokenPair, error) {
 	claims, err := s.jwtMgr.VerifyRefresh(refreshToken)
 	if err != nil {
@@ -105,7 +105,17 @@ func (s *CompanyService) Refresh(ctx context.Context, refreshToken string) (*jwt
 	if err != nil {
 		return nil, fmt.Errorf("CompanyService.Refresh: %w", domain.ErrUnauthorized)
 	}
+	// Rotate: revoke the old token before issuing a new one.
+	_ = s.jwtMgr.RevokeRefresh(ctx, refreshToken)
 	return s.jwtMgr.GenerateTyped(c.ID, c.Slug, "company", jwt.SubjectTypeCompany)
+}
+
+// Logout revokes the company's refresh token.
+func (s *CompanyService) Logout(ctx context.Context, refreshToken string) error {
+	if err := s.jwtMgr.RevokeRefresh(ctx, refreshToken); err != nil {
+		return fmt.Errorf("CompanyService.Logout: %w", err)
+	}
+	return nil
 }
 
 // GetByID returns a company by its ID.

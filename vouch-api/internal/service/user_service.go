@@ -92,7 +92,7 @@ func (s *UserService) uniqueUsername(ctx context.Context, login string) string {
 	return login + "-" + randHex(2)
 }
 
-// Refresh validates a refresh token and issues a new token pair.
+// Refresh validates a refresh token, revokes it (rotation), and issues a new pair.
 func (s *UserService) Refresh(ctx context.Context, refreshToken string) (*jwt.TokenPair, error) {
 	claims, err := s.jwt.VerifyRefresh(refreshToken)
 	if err != nil {
@@ -102,11 +102,21 @@ func (s *UserService) Refresh(ctx context.Context, refreshToken string) (*jwt.To
 	if err != nil {
 		return nil, fmt.Errorf("UserService.Refresh: %w", err)
 	}
+	// Rotate: revoke the old refresh token before issuing a new one.
+	_ = s.jwt.RevokeRefresh(ctx, refreshToken)
 	tokens, err := s.jwt.Generate(user.ID, user.Username, string(user.Role))
 	if err != nil {
 		return nil, fmt.Errorf("UserService.Refresh: %w", err)
 	}
 	return tokens, nil
+}
+
+// Logout revokes the supplied refresh token, ending the session.
+func (s *UserService) Logout(ctx context.Context, refreshToken string) error {
+	if err := s.jwt.RevokeRefresh(ctx, refreshToken); err != nil {
+		return fmt.Errorf("UserService.Logout: %w", err)
+	}
+	return nil
 }
 
 // GetByUsername returns a public profile by username.

@@ -18,6 +18,7 @@ import (
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/handler"
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/observability"
 	repo "github.com/SomeshTalligeriDEV/vouch-api/internal/repository/mongo"
+	redisrepo "github.com/SomeshTalligeriDEV/vouch-api/internal/repository/redis"
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/service"
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/worker"
 	"github.com/SomeshTalligeriDEV/vouch-api/pkg/jwt"
@@ -78,7 +79,8 @@ func main() {
 	r2Presigner := external.NewR2Presigner(cfg.R2AccessKey, cfg.R2SecretKey, cfg.R2Endpoint, cfg.R2Bucket, cfg.R2PublicURL)
 
 	// Core
-	jwtMgr := jwt.NewManager(cfg.JWTSecret, cfg.JWTRefreshSecret)
+	blocklist := redisrepo.NewTokenBlocklist(rdb)
+	jwtMgr := jwt.NewManager(cfg.JWTSecret, cfg.JWTRefreshSecret).WithBlocklist(blocklist)
 	val := validator.New()
 
 	// Services

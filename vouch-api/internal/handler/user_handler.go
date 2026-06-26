@@ -109,6 +109,22 @@ func (h *UserHandler) UpdateMe(c *fiber.Ctx) error {
 	return response.OK(c, user)
 }
 
+type logoutRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// Logout handles POST /auth/logout — revokes the supplied refresh token.
+func (h *UserHandler) Logout(c *fiber.Ctx) error {
+	var req logoutRequest
+	if err := parseAndValidate(c, h.val, &req); err != nil {
+		return err
+	}
+	if err := h.users.Logout(c.UserContext(), req.RefreshToken); err != nil {
+		return response.FromDomain(c, err)
+	}
+	return response.OK(c, fiber.Map{"logged_out": true})
+}
+
 type connectStripeRequest struct {
 	Code string `json:"code" validate:"required"`
 }

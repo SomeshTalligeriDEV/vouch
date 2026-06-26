@@ -240,6 +240,8 @@ export const api = {
   // Auth
   loginWithGitHub: (code: string) =>
     request<AuthResponse>("/auth/github", { method: "POST", body: { code } }),
+  logout: (refresh_token: string) =>
+    request<unknown>("/auth/logout", { method: "POST", body: { refresh_token } }),
 
   // Users
   getMe: () => request<User>("/users/me", { auth: true }),
@@ -285,6 +287,8 @@ export const api = {
     request<CompanyAuthResponse>("/companies/login", { method: "POST", body: { email, password } }),
   companyRefresh: (refresh_token: string) =>
     request<TokenPair>("/companies/refresh", { method: "POST", body: { refresh_token } }),
+  companyRefreshLogout: (refresh_token: string) =>
+    request<unknown>("/companies/logout", { method: "POST", body: { refresh_token } }),
   getCompanyMe: () => request<Company>("/companies/me", { companyAuth: true }),
   updateCompanyMe: (input: Partial<Company>) =>
     request<Company>("/companies/me", { method: "PATCH", body: input, companyAuth: true }),

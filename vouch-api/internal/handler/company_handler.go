@@ -82,6 +82,18 @@ func (h *CompanyHandler) Refresh(c *fiber.Ctx) error {
 	return response.OK(c, tokens)
 }
 
+// Logout handles POST /api/v1/companies/logout — revokes the refresh token.
+func (h *CompanyHandler) Logout(c *fiber.Ctx) error {
+	var in companyRefreshInput
+	if err := c.BodyParser(&in); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "bad_request", "invalid JSON")
+	}
+	if err := h.svc.Logout(c.UserContext(), in.RefreshToken); err != nil {
+		return response.FromDomain(c, err)
+	}
+	return response.OK(c, fiber.Map{"logged_out": true})
+}
+
 // GetMe handles GET /api/v1/companies/me — returns the authenticated company.
 func (h *CompanyHandler) GetMe(c *fiber.Ctx) error {
 	id := middleware.UserID(c)
