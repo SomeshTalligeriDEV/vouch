@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -24,6 +25,9 @@ func NewCompanyRepo(c *Client) *CompanyRepo {
 }
 
 func (r *CompanyRepo) Create(ctx context.Context, c *domain.Company) error {
+	if c.ID == "" {
+		c.ID = primitive.NewObjectID().Hex()
+	}
 	c.CreatedAt = time.Now().UTC()
 	c.UpdatedAt = c.CreatedAt
 	_, err := r.col.InsertOne(ctx, c)
