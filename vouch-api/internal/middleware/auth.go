@@ -77,6 +77,24 @@ func SubjectType(c *fiber.Ctx) string {
 	return "user"
 }
 
+// RequireSubjectType returns middleware that rejects requests where the token's
+// subject type does not match. Use this to prevent a company token from hitting
+// user-only endpoints and vice versa.
+func RequireSubjectType(stype string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		got, _ := c.Locals(CtxSubjectType).(string)
+		// Legacy tokens issued before stype was added carry an empty string;
+		// treat those as "user" so existing builder sessions aren't broken.
+		if got == "" {
+			got = "user"
+		}
+		if got != stype {
+			return response.Error(c, fiber.StatusForbidden, "forbidden", "endpoint requires "+stype+" token")
+		}
+		return c.Next()
+	}
+}
+
 func bearerToken(c *fiber.Ctx) (string, bool) {
 	h := c.Get("Authorization")
 	if h == "" {

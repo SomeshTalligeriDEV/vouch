@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	neturl "net/url"
+
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/domain"
@@ -36,6 +38,11 @@ func (s *CompanyService) Register(ctx context.Context, name, email, password, we
 	}
 	if len(password) < 8 {
 		return nil, fmt.Errorf("CompanyService.Register: password must be at least 8 characters: %w", domain.ErrInvalidInput)
+	}
+	if website != "" {
+		if err := validateHTTPSURL(website); err != nil {
+			return nil, fmt.Errorf("CompanyService.Register: %w", domain.ErrInvalidInput)
+		}
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -121,6 +128,9 @@ func (s *CompanyService) UpdateProfile(ctx context.Context, id string, name, web
 		c.Name = name
 	}
 	if website != "" {
+		if err := validateHTTPSURL(website); err != nil {
+			return nil, fmt.Errorf("CompanyService.UpdateProfile: invalid website URL: %w", domain.ErrInvalidInput)
+		}
 		c.Website = website
 	}
 	if logoURL != "" {
@@ -136,4 +146,20 @@ func (s *CompanyService) UpdateProfile(ctx context.Context, id string, name, web
 		return nil, fmt.Errorf("CompanyService.UpdateProfile: %w", err)
 	}
 	return c, nil
+}
+
+// validateHTTPSURL rejects any URL whose scheme is not http or https,
+// preventing javascript: and data: URIs from being stored and later
+// rendered as hrefs.
+func validateHTTPSURL(raw string) error {
+	u, err := neturl.ParseRequestURI(raw)
+	if err != nil {
+		return fmt.Errorf("invalid URL: %w", err)
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "http", "https":
+		return nil
+	default:
+		return fmt.Errorf("URL scheme %q not allowed; must be http or https", u.Scheme)
+	}
 }

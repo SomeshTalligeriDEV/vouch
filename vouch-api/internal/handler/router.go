@@ -55,24 +55,27 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	authGrp.Post("/github", authLimiter, h.User.GitHubCallback)
 	authGrp.Post("/refresh", authLimiter, h.User.Refresh)
 
+	companyOnly := middleware.RequireSubjectType("company")
+	userOnly := middleware.RequireSubjectType("user")
+
 	// Users
 	users := v1.Group("/users")
 	users.Get("/:username", h.User.GetByUsername)
-	users.Patch("/me", auth, mutationLimiter, h.User.UpdateMe)
-	users.Post("/me/stripe", auth, mutationLimiter, h.User.ConnectStripe)
+	users.Patch("/me", auth, userOnly, mutationLimiter, h.User.UpdateMe)
+	users.Post("/me/stripe", auth, userOnly, mutationLimiter, h.User.ConnectStripe)
 
 	// Projects
 	projects := v1.Group("/projects")
 	projects.Get("/", h.Project.List)
-	projects.Post("/", auth, mutationLimiter, h.Project.Create)
+	projects.Post("/", auth, userOnly, mutationLimiter, h.Project.Create)
 	projects.Get("/:id", h.Project.Get)
-	projects.Patch("/:id", auth, mutationLimiter, h.Project.Update)
-	projects.Delete("/:id", auth, mutationLimiter, h.Project.Delete)
+	projects.Patch("/:id", auth, userOnly, mutationLimiter, h.Project.Update)
+	projects.Delete("/:id", auth, userOnly, mutationLimiter, h.Project.Delete)
 
 	// Scores
 	scores := v1.Group("/scores")
 	scores.Get("/", h.Score.Leaderboard)
-	scores.Post("/recalculate", auth, mutationLimiter, h.Score.Recalculate)
+	scores.Post("/recalculate", auth, userOnly, mutationLimiter, h.Score.Recalculate)
 	scores.Get("/:username", h.Score.GetByUsername)
 
 	// Problems
@@ -97,8 +100,8 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	companies.Post("/register", authLimiter, h.Company.Register)
 	companies.Post("/login", authLimiter, h.Company.Login)
 	companies.Post("/refresh", authLimiter, h.Company.Refresh)
-	companies.Get("/me", auth, h.Company.GetMe)
-	companies.Patch("/me", auth, mutationLimiter, h.Company.UpdateMe)
+	companies.Get("/me", auth, companyOnly, h.Company.GetMe)
+	companies.Patch("/me", auth, companyOnly, mutationLimiter, h.Company.UpdateMe)
 	companies.Get("/:slug", h.Company.GetBySlug)
 
 	// Admin (requires auth + admin role)
