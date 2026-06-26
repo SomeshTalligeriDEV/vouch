@@ -84,6 +84,7 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	// Projects
 	projects := v1.Group("/projects")
 	projects.Get("/", h.Project.List)
+	projects.Get("/mine", auth, userOnly, h.Project.ListMine)
 	projects.Post("/", auth, userOnly, mutationLimiter, h.Project.Create)
 	projects.Get("/:id", h.Project.Get)
 	projects.Patch("/:id", auth, userOnly, mutationLimiter, h.Project.Update)

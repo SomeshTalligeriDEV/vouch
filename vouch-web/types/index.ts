@@ -7,14 +7,20 @@ export interface User {
   email: string;
   username: string;
   name: string;
+  display_name: string;
   bio: string;
   avatar_url: string;
   github_id: number;
   github_login: string;
+  github_username: string;
   role: Role;
   is_verified: boolean;
   website_url: string;
+  website: string;
+  location: string;
   twitter_handle: string;
+  stripe_account_id?: string;
+  has_stripe: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +53,10 @@ export interface Project {
 export type Tier = "Bronze" | "Silver" | "Gold" | "Platinum" | "24 Karat";
 
 export interface ScoreBreakdown {
+  projects_score: number;
+  reviews_score: number;
+  vouches_score: number;
+  activity_score: number;
   user: number;
   revenue: number;
   impact: number;
@@ -55,12 +65,13 @@ export interface ScoreBreakdown {
 
 export interface BuilderScore {
   id: string;
+  user_id: string;
   builder_id: string;
   username: string;
   name: string;
   avatar_url: string;
   total_score: number;
-  tier: Tier;
+  tier: string;
   breakdown: ScoreBreakdown;
   stripe_verified: boolean;
   stripe_multiplier: number;

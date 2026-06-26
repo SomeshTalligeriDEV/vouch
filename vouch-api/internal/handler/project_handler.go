@@ -43,6 +43,22 @@ func (h *ProjectHandler) List(c *fiber.Ctx) error {
 	return response.List(c, items, f.Page, f.Limit, total)
 }
 
+// ListMine handles GET /projects/mine — returns projects belonging to the authenticated builder.
+func (h *ProjectHandler) ListMine(c *fiber.Ctx) error {
+	page, limit := pagination(c)
+	builderID := middleware.UserID(c)
+	f := domain.ProjectFilter{
+		BuilderID: builderID,
+		Page:      page,
+		Limit:     limit,
+	}
+	items, total, err := h.projects.List(c.UserContext(), f)
+	if err != nil {
+		return response.FromDomain(c, err)
+	}
+	return response.List(c, items, f.Page, f.Limit, total)
+}
+
 type createProjectRequest struct {
 	Title       string   `json:"title" validate:"required,min=2,max=120"`
 	Tagline     string   `json:"tagline" validate:"max=160"`
