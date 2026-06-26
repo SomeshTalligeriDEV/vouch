@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 export function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
-      href={`/discover/${project.id}`}
+      href={`/projects/${project.id}`}
       className="card block transition hover:border-crimson/40"
     >
       <div className="flex items-start justify-between gap-3">
