@@ -40,27 +40,27 @@ func (c *Client) Disconnect(ctx context.Context) error {
 
 // EnsureIndexes creates the indexes Vouch relies on. Safe to call repeatedly.
 func (c *Client) EnsureIndexes(ctx context.Context) error {
-	uniq := options.Index().SetUnique(true)
+	uniq := func() *options.IndexOptions { return options.Index().SetUnique(true) }
 
 	specs := []struct {
 		coll  string
 		model mongo.IndexModel
 	}{
-		{"users", mongo.IndexModel{Keys: bsonDoc("email", 1), Options: uniq}},
-		{"users", mongo.IndexModel{Keys: bsonDoc("username", 1), Options: uniq}},
-		{"users", mongo.IndexModel{Keys: bsonDoc("github_id", 1), Options: uniq}},
-		{"projects", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq}},
+		{"users", mongo.IndexModel{Keys: bsonDoc("email", 1), Options: uniq()}},
+		{"users", mongo.IndexModel{Keys: bsonDoc("username", 1), Options: uniq()}},
+		{"users", mongo.IndexModel{Keys: bsonDoc("github_id", 1), Options: uniq()}},
+		{"projects", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq()}},
 		{"projects", mongo.IndexModel{Keys: bsonDoc("builder_id", 1)}},
 		{"projects", mongo.IndexModel{Keys: bsonDoc("status", 1)}},
-		{"builder_scores", mongo.IndexModel{Keys: bsonDoc("builder_id", 1), Options: uniq}},
+		{"builder_scores", mongo.IndexModel{Keys: bsonDoc("builder_id", 1), Options: uniq()}},
 		{"builder_scores", mongo.IndexModel{Keys: bsonDoc("total_score", -1)}},
-		{"problems", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq}},
+		{"problems", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq()}},
 		{"problems", mongo.IndexModel{Keys: bsonDoc("status", 1)}},
 		{"reviews", mongo.IndexModel{Keys: bsonDoc("project_id", 1)}},
-		{"reviews", mongo.IndexModel{Keys: compoundKey("project_id", "reviewer_id"), Options: uniq}},
+		{"reviews", mongo.IndexModel{Keys: compoundKey("project_id", "reviewer_id"), Options: uniq()}},
 		{"stripe_snapshots", mongo.IndexModel{Keys: bsonDoc("builder_id", 1)}},
-		{"companies", mongo.IndexModel{Keys: bsonDoc("email", 1), Options: uniq}},
-		{"companies", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq}},
+		{"companies", mongo.IndexModel{Keys: bsonDoc("email", 1), Options: uniq()}},
+		{"companies", mongo.IndexModel{Keys: bsonDoc("slug", 1), Options: uniq()}},
 	}
 
 	for _, s := range specs {
