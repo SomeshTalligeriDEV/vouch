@@ -36,6 +36,17 @@ type Project struct {
 	UpdatedAt     time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
+// IsOwnedBy reports whether the project belongs to the given builder.
+func (p *Project) IsOwnedBy(builderID string) bool { return p.BuilderID == builderID }
+
+// IsPublic reports whether the project is visible to anonymous visitors.
+func (p *Project) IsPublic() bool {
+	return p.Status == ProjectStatusLive || p.Status == ProjectStatusAcquired
+}
+
+// IsForSale reports whether the project can be acquired.
+func (p *Project) IsForSale() bool { return p.ForSale && p.Status == ProjectStatusLive }
+
 // ProjectFilter holds optional query constraints for listing projects.
 type ProjectFilter struct {
 	BuilderID string
