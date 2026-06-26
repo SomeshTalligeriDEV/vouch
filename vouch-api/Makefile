@@ -45,6 +45,16 @@ docker-down:
 clean:
 	rm -rf bin/
 
+## test-cover: run tests and open HTML coverage report
+test-cover:
+	go test -race -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "→ coverage.html"
+
+## gen-secret: print a secure 32-byte hex string for JWT_SECRET
+gen-secret:
+	@openssl rand -hex 32
+
 ## help: list available targets
 help:
 	@grep -E '^## ' Makefile | sed 's/## /  /'
