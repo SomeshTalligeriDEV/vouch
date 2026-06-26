@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Role enumerates the kinds of accounts on Vouch.
 type Role string
@@ -29,6 +32,17 @@ type User struct {
 	CreatedAt       time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt       time.Time `bson:"updated_at" json:"updated_at"`
 }
+
+// DisplayName returns the user's full name when set, otherwise their username.
+func (u *User) DisplayName() string {
+	if strings.TrimSpace(u.Name) != "" {
+		return u.Name
+	}
+	return u.Username
+}
+
+// IsAdmin reports whether the user holds the admin role.
+func (u *User) IsAdmin() bool { return u.Role == RoleAdmin }
 
 // HasStripe reports whether the user has connected a Stripe account.
 func (u *User) HasStripe() bool {
