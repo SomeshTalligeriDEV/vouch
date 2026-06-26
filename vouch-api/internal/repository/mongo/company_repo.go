@@ -38,12 +38,11 @@ func (r *CompanyRepo) Create(ctx context.Context, c *domain.Company) error {
 }
 
 func (r *CompanyRepo) GetByID(ctx context.Context, id string) (*domain.Company, error) {
-	oid, err := objectID(id)
-	if err != nil {
+	if id == "" {
 		return nil, domain.ErrNotFound
 	}
 	var c domain.Company
-	if err := r.col.FindOne(ctx, bson.M{"_id": oid}).Decode(&c); err != nil {
+	if err := r.col.FindOne(ctx, bson.M{"_id": id}).Decode(&c); err != nil {
 		return nil, mapMongoErr(err)
 	}
 	return &c, nil
