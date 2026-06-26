@@ -1,0 +1,142 @@
+### Vouch API — REST Client collection
+### Works with the VS Code "REST Client" extension or JetBrains HTTP Client.
+### Set @token after logging in (copy data.tokens.access_token from /auth/github).
+
+@baseUrl = http://localhost:8080/api/v1
+@token = PASTE_ACCESS_TOKEN_HERE
+@projectId = PASTE_PROJECT_ID
+@problemId = PASTE_PROBLEM_ID
+@username = ada
+
+### Health
+GET http://localhost:8080/health
+
+### --- Auth ---
+
+### GitHub OAuth callback (exchange code → tokens)
+POST {{baseUrl}}/auth/github
+Content-Type: application/json
+
+{ "code": "GITHUB_OAUTH_CODE" }
+
+### Refresh tokens
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{ "refresh_token": "PASTE_REFRESH_TOKEN" }
+
+### --- Users ---
+
+### Public builder profile
+GET {{baseUrl}}/users/{{username}}
+
+### Update my profile
+PATCH {{baseUrl}}/users/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Ada Lovelace", "bio": "Shipping QueryForge.", "website_url": "https://example.com" }
+
+### Connect Stripe (read-only OAuth)
+POST {{baseUrl}}/users/me/stripe
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "code": "STRIPE_OAUTH_CODE" }
+
+### --- Projects ---
+
+### Discover (paginated, filterable)
+GET {{baseUrl}}/projects?sort=mrr&page=1&limit=20
+
+### Create a project
+POST {{baseUrl}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "QueryForge",
+  "tagline": "Visual SQL builder for analysts",
+  "description": "Drag-and-drop SQL.",
+  "live_url": "https://queryforge.dev",
+  "repo_url": "https://github.com/ada/queryforge",
+  "payment_link": "https://buy.stripe.com/demo",
+  "tags": ["saas", "developer-tools"],
+  "for_sale": false
+}
+
+### Single project
+GET {{baseUrl}}/projects/{{projectId}}
+
+### Update a project
+PATCH {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "tagline": "Now with AI query suggestions", "status": "live" }
+
+### Archive a project
+DELETE {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{token}}
+
+### --- Scores ---
+
+### Leaderboard
+GET {{baseUrl}}/scores?limit=25
+
+### Builder score + breakdown
+GET {{baseUrl}}/scores/{{username}}
+
+### Trigger recalculation (async)
+POST {{baseUrl}}/scores/recalculate
+Authorization: Bearer {{token}}
+
+### --- Problems (demand board) ---
+
+### List problems
+GET {{baseUrl}}/problems?sort=upvotes&status=open
+
+### Post a problem
+POST {{baseUrl}}/problems
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Self-hosted status page that ingests Prometheus",
+  "description": "Clean status page wired to existing Prometheus alerts.",
+  "tags": ["infra"],
+  "budget_min": 500,
+  "budget_max": 2000
+}
+
+### Single problem
+GET {{baseUrl}}/problems/{{problemId}}
+
+### Claim a problem (emails the poster)
+POST {{baseUrl}}/problems/{{problemId}}/claim
+Authorization: Bearer {{token}}
+
+### Upvote a problem
+POST {{baseUrl}}/problems/{{problemId}}/upvote
+Authorization: Bearer {{token}}
+
+### --- Reviews ---
+
+### Post a review
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "project_id": "{{projectId}}", "rating": 5, "body": "Replaced a paid tool for us." }
+
+### Reviews for a project
+GET {{baseUrl}}/reviews/project/{{projectId}}
+
+### --- Uploads ---
+
+### Get a presigned R2 upload URL, then PUT the file to upload_url
+POST {{baseUrl}}/uploads/presign
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content_type": "image/png" }

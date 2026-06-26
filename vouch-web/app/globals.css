@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-paper text-text antialiased;
+}
+
+::selection {
+  background: #c8f24c;
+  color: #14181b;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Cards — white panels, soft border */
+.card {
+  @apply rounded-2xl border border-line bg-panel p-6;
+}
+
+/* Buttons */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98];
+}
+
+/* Lime pill with hard offset shadow — primary CTA */
+.btn-primary {
+  @apply btn bg-accent text-ink shadow-hard hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg;
+}
+
+/* Dark pill */
+.btn-crimson {
+  @apply btn bg-ink text-accent hover:opacity-90;
+}
+
+/* Outline pill */
+.btn-ghost {
+  @apply btn border-[1.4px] border-ink/20 bg-transparent text-ink hover:border-ink/50 hover:bg-ink/5;
+}
+
+/* Pill label / tag */
+.tag {
+  @apply inline-block rounded-full border border-ink/15 bg-panel px-3 py-1 font-mono text-xs font-medium text-ink/70;
+}
+
+/* Inputs */
+.input {
+  @apply w-full rounded-full border border-ink/15 bg-panel px-4 py-2.5 text-sm text-ink outline-none transition placeholder:text-ink/40 focus:border-accent-ink;
+}

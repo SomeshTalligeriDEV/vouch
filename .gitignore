@@ -1,0 +1,28 @@
+# deps & build
+node_modules/
+.next/
+out/
+dist/
+/out
+*.tsbuildinfo
+next-env.d.ts
+
+# env / secrets
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# go
+*.test
+*.out
+
+# tooling artifacts
+.firecrawl/
+.playwright-mcp/
+*.jpeg
+*.png
+pom-full.jpeg
+
+# os
+.DS_Store
