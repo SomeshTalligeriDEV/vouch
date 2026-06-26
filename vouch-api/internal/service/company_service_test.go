@@ -33,7 +33,7 @@ func newFakeCompanyRepo() *fakeCompanyRepo {
 
 func (r *fakeCompanyRepo) Create(_ context.Context, c *domain.Company) error {
 	if _, ok := r.byEmail[c.Email]; ok {
-		return domain.ErrConflict
+		return domain.ErrAlreadyExists
 	}
 	c.ID = "cid-" + c.Email
 	r.byEmail[c.Email] = c
