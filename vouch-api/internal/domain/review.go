@@ -20,3 +20,9 @@ type ReviewStats struct {
 	Count   int
 	Average float64
 }
+
+// IsVerifiedPurchase reports whether the reviewer paid for the project via Stripe.
+func (r *Review) IsVerifiedPurchase() bool { return r.VerifiedPurchase }
+
+// IsValid reports whether the review has a rating in the valid 1–5 range.
+func (r *Review) IsValid() bool { return r.Rating >= 1 && r.Rating <= 5 }
