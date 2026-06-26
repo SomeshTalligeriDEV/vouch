@@ -34,6 +34,12 @@ func main() {
 
 	logger := newLogger(cfg)
 
+	version := "0.1.0"
+	logger.Info().
+		Str("version", version).
+		Str("env", cfg.Env).
+		Msg("🚀 vouch-api starting")
+
 	flushSentry, err := observability.InitSentry(cfg.SentryDSN, cfg.Env, "vouch-api")
 	if err != nil {
 		logger.Fatal().Err(err).Msg("sentry init failed")
