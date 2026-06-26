@@ -56,6 +56,9 @@ export interface ScoreBreakdown {
 export interface BuilderScore {
   id: string;
   builder_id: string;
+  username: string;
+  name: string;
+  avatar_url: string;
   total_score: number;
   tier: Tier;
   breakdown: ScoreBreakdown;

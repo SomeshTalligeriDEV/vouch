@@ -159,23 +159,6 @@ export function RankSection() {
 
       <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative" }}>
 
-        {/* header */}
-        <div style={{ textAlign: "center", marginBottom: 72, opacity: visible ? 1 : 0, transform: visible ? "none" : "translateY(24px)", transition: "opacity .6s, transform .6s cubic-bezier(.34,1.56,.64,1)" }}>
-          <div style={{ display: "inline-block", padding: "5px 14px", border: "1px solid rgba(200,242,76,.35)", borderRadius: 999, fontFamily: "'Space Mono',monospace", fontSize: 10, color: "#C8F24C", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 20 }}>
-            Builder Score System
-          </div>
-          <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "clamp(36px,5vw,60px)", color: "#F4F6F0", lineHeight: 1.05, margin: 0, letterSpacing: "-.02em" }}>
-            The score that<br />
-            <span style={{ color: "#C8F24C", textShadow: "0 0 40px rgba(200,242,76,.4)" }}>
-              means something.
-            </span>
-          </h2>
-          <p style={{ marginTop: 16, fontSize: 16, color: "rgba(244,246,240,.55)", fontFamily: "'DM Sans',sans-serif", maxWidth: 480, marginInline: "auto" }}>
-            Every ship, every user, every dollar — quantified into a single rank
-            that the market can trust.
-          </p>
-        </div>
-
         {/* formula + live score */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 48, alignItems: "center", marginBottom: 80 }}>
 
@@ -258,12 +241,6 @@ export function RankSection() {
           ))}
         </div>
 
-        {/* bottom cta */}
-        <div style={{ textAlign: "center", marginTop: 64, opacity: visible ? 1 : 0, transition: "opacity .6s .6s" }}>
-          <p style={{ fontSize: 13, fontFamily: "'Space Mono',monospace", color: "rgba(244,246,240,.35)", letterSpacing: ".06em", textTransform: "uppercase" }}>
-            Your rank is public · updated in real time · trusted by the market
-          </p>
-        </div>
       </div>
 
       <style>{`

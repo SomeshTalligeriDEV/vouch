@@ -101,10 +101,17 @@ export default function DashboardPage() {
               key={s.id}
               className="flex items-center justify-between rounded-lg border border-line px-3 py-2"
             >
-              <span className="flex items-center gap-3">
-                <span className="w-6 text-ink/50">#{i + 1}</span>
-                <span className="text-sm text-ink/80">{s.builder_id}</span>
-              </span>
+              <Link href={`/builder/${s.username || s.builder_id}`} className="flex items-center gap-3 hover:opacity-80">
+                <span className="w-6 text-center text-xs text-ink/50">#{i + 1}</span>
+                {s.avatar_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.avatar_url} alt={s.username} className="h-7 w-7 rounded-full border border-line" />
+                )}
+                <div>
+                  <span className="block text-sm font-medium text-ink">{s.name || s.username || "—"}</span>
+                  {s.username && <span className="block text-xs text-ink/50">@{s.username}</span>}
+                </div>
+              </Link>
               <ScoreBadge tier={s.tier} score={s.total_score} />
             </li>
           ))}

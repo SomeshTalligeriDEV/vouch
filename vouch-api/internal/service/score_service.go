@@ -121,14 +121,32 @@ func (s *ScoreService) EnqueueRecalc(ctx context.Context, builderID string) erro
 	return nil
 }
 
-// Leaderboard returns the top builders by total score.
-func (s *ScoreService) Leaderboard(ctx context.Context, limit int) ([]*domain.BuilderScore, error) {
+// LeaderboardEntry enriches a score with the builder's public profile fields.
+type LeaderboardEntry struct {
+	*domain.BuilderScore
+	Username  string `json:"username"`
+	Name      string `json:"name"`
+	AvatarURL string `json:"avatar_url"`
+}
+
+// Leaderboard returns the top builders by total score, enriched with user info.
+func (s *ScoreService) Leaderboard(ctx context.Context, limit int) ([]*LeaderboardEntry, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 25
 	}
-	out, err := s.scores.TopBuilders(ctx, limit)
+	scores, err := s.scores.TopBuilders(ctx, limit)
 	if err != nil {
 		return nil, fmt.Errorf("ScoreService.Leaderboard: %w", err)
+	}
+	out := make([]*LeaderboardEntry, 0, len(scores))
+	for _, sc := range scores {
+		entry := &LeaderboardEntry{BuilderScore: sc}
+		if u, err := s.users.GetByID(ctx, sc.BuilderID); err == nil {
+			entry.Username = u.Username
+			entry.Name = u.Name
+			entry.AvatarURL = u.AvatarURL
+		}
+		out = append(out, entry)
 	}
 	return out, nil
 }
