@@ -1,0 +1,29 @@
+# Build artifacts
+bin/
+*.test
+*.prof
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Go cache
+vendor/
+
+# Git
+.git
+.gitignore
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# CI / docs
+.github/
+*.md
