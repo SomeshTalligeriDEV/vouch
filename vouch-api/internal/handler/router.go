@@ -76,8 +76,8 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 
 	// Users
 	users := v1.Group("/users")
-	users.Get("/:username", h.User.GetByUsername)
 	users.Get("/me", auth, userOnly, h.User.GetMe)
+	users.Get("/:username", h.User.GetByUsername)
 	users.Patch("/me", auth, userOnly, mutationLimiter, h.User.UpdateMe)
 	users.Post("/me/stripe", auth, userOnly, mutationLimiter, h.User.ConnectStripe)
 
