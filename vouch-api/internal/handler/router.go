@@ -44,8 +44,10 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 		MaxAge:           86400,
 	}))
 
+	app.Use(middleware.Recover(d.Log))
 	app.Use(middleware.RequestID())
 	app.Use(middleware.Logger(d.Log))
+	app.Use(middleware.Timeout(30 * time.Second))
 
 	auth := middleware.Auth(d.JWT)
 	mutationLimiter := middleware.NewRateLimiter(d.Redis, 60, time.Minute).Limit()
