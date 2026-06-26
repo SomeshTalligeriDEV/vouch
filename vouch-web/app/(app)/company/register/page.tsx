@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { api } from "@/lib/api";
-import { storeTokens } from "@/lib/auth";
+import { storeCompanyTokens } from "@/lib/auth";
 
 const SIZES = [
   { value: "1", label: "Solo founder" },
@@ -33,7 +33,7 @@ export default function CompanyRegisterPage() {
     setError(null);
     try {
       const res = await api.companyRegister(form);
-      storeTokens(res.tokens);
+      storeCompanyTokens(res.tokens);
       localStorage.setItem("vouch_company", JSON.stringify(res.company));
       router.replace("/company/dashboard");
     } catch (err) {

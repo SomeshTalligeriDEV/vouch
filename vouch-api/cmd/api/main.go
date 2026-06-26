@@ -96,6 +96,7 @@ func main() {
 	app := fiber.New(fiber.Config{
 		AppName:               "vouch-api",
 		DisableStartupMessage: true,
+		BodyLimit:             2 * 1024 * 1024, // 2 MB — presigned uploads bypass this, raw JSON only
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			logger.Error().Err(err).Str("path", c.Path()).Msg("unhandled error")
 			observability.Capture(err, map[string]string{
@@ -115,7 +116,7 @@ func main() {
 		Upload:  handler.NewUploadHandler(uploadSvc, val),
 		Company: handler.NewCompanyHandler(companySvc, val),
 		Admin:   handler.NewAdminHandler(adminSvc),
-	}, handler.Deps{JWT: jwtMgr, Redis: rdb, Log: logger})
+	}, handler.Deps{JWT: jwtMgr, Redis: rdb, Log: logger, AllowedOrigins: cfg.AllowedOrigins})
 
 	// Graceful shutdown
 	go func() {

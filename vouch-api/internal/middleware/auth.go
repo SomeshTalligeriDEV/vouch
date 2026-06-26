@@ -114,3 +114,11 @@ func UserID(c *fiber.Ctx) string {
 	}
 	return ""
 }
+
+// Username returns the authenticated username from the context, or "" if absent.
+func Username(c *fiber.Ctx) string {
+	if v, ok := c.Locals(CtxUsername).(string); ok {
+		return v
+	}
+	return ""
+}

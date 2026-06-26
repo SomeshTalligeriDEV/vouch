@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { clearTokens, getAccessToken, storeTokens } from "@/lib/auth";
 import type { User } from "@/types";
 
@@ -31,9 +31,22 @@ export const useAuth = create<AuthState>((set) => ({
       set({ status: "unauthenticated" });
       return;
     }
-    // We have a token; trust it until a request proves otherwise. The username
-    // is unknown here, so callers fetch fresh profile data as needed.
-    set({ status: "authenticated" });
+    try {
+      // Verify the token is real by fetching the actual user profile.
+      // This catches expired tokens, revoked sessions, and forged JWTs.
+      const user = await api.getMe();
+      set({ user, status: "authenticated" });
+    } catch (err) {
+      // 401 means the token is expired/invalid — clear and force re-login.
+      // Any other error (network down, 5xx) keeps the session alive optimistically
+      // so a server hiccup doesn't log everyone out.
+      if (err instanceof ApiError && err.status === 401) {
+        clearTokens();
+        set({ user: null, status: "unauthenticated" });
+      } else {
+        set({ status: "authenticated" });
+      }
+    }
   },
 
   logout: () => {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 
@@ -25,13 +26,25 @@ type Handlers struct {
 
 // Deps carries shared dependencies needed to register routes.
 type Deps struct {
-	JWT   *jwt.Manager
-	Redis *redis.Client
-	Log   zerolog.Logger
+	JWT        *jwt.Manager
+	Redis      *redis.Client
+	Log        zerolog.Logger
+	AllowedOrigins string // comma-separated origins, e.g. "https://vouch.dev,https://www.vouch.dev"
 }
 
 // Register mounts all routes onto the Fiber app under /api/v1.
 func Register(app *fiber.App, h Handlers, d Deps) {
+	// CORS must be first so preflight OPTIONS requests are handled before auth.
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     d.AllowedOrigins,
+		AllowMethods:     "GET,POST,PATCH,DELETE,OPTIONS",
+		AllowHeaders:     "Origin,Content-Type,Authorization,X-Request-ID",
+		ExposeHeaders:    "X-Request-ID",
+		AllowCredentials: false,
+		MaxAge:           86400,
+	}))
+
+	app.Use(middleware.RequestID())
 	app.Use(middleware.Logger(d.Log))
 
 	auth := middleware.Auth(d.JWT)
@@ -61,6 +74,7 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	// Users
 	users := v1.Group("/users")
 	users.Get("/:username", h.User.GetByUsername)
+	users.Get("/me", auth, userOnly, h.User.GetMe)
 	users.Patch("/me", auth, userOnly, mutationLimiter, h.User.UpdateMe)
 	users.Post("/me/stripe", auth, userOnly, mutationLimiter, h.User.ConnectStripe)
 
@@ -78,17 +92,17 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	scores.Post("/recalculate", auth, userOnly, mutationLimiter, h.Score.Recalculate)
 	scores.Get("/:username", h.Score.GetByUsername)
 
-	// Problems
+	// Problems — both builders and companies can post/claim/upvote
 	problems := v1.Group("/problems")
 	problems.Get("/", h.Problem.List)
 	problems.Post("/", auth, mutationLimiter, h.Problem.Create)
 	problems.Get("/:id", h.Problem.Get)
-	problems.Post("/:id/claim", auth, mutationLimiter, h.Problem.Claim)
+	problems.Post("/:id/claim", auth, userOnly, mutationLimiter, h.Problem.Claim)
 	problems.Post("/:id/upvote", auth, mutationLimiter, h.Problem.Upvote)
 
-	// Reviews
+	// Reviews — builders only (they're reviewing projects they used/paid for)
 	reviews := v1.Group("/reviews")
-	reviews.Post("/", auth, mutationLimiter, h.Review.Create)
+	reviews.Post("/", auth, userOnly, mutationLimiter, h.Review.Create)
 	reviews.Get("/project/:id", h.Review.ListByProject)
 
 	// Uploads

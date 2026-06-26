@@ -69,6 +69,19 @@ func (h *UserHandler) GetByUsername(c *fiber.Ctx) error {
 	return response.OK(c, user)
 }
 
+// GetMe handles GET /users/me — returns the authenticated user's own profile.
+func (h *UserHandler) GetMe(c *fiber.Ctx) error {
+	username := middleware.Username(c)
+	if username == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "unauthorized", "missing identity")
+	}
+	user, err := h.users.GetByUsername(c.UserContext(), username)
+	if err != nil {
+		return response.FromDomain(c, err)
+	}
+	return response.OK(c, user)
+}
+
 type updateProfileRequest struct {
 	Name          string `json:"name" validate:"max=100"`
 	Bio           string `json:"bio" validate:"max=500"`

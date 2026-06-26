@@ -16,8 +16,12 @@ import type {
 } from "@/types";
 import {
   clearTokens,
+  clearCompanyTokens,
   getAccessToken,
+  getCompanyAccessToken,
+  getCompanyRefreshToken,
   getRefreshToken,
+  storeCompanyTokens,
   storeTokens,
 } from "@/lib/auth";
 
@@ -38,12 +42,13 @@ interface RequestOptions {
   method?: string;
   body?: unknown;
   auth?: boolean;
+  companyAuth?: boolean;
   query?: Record<string, string | number | boolean | undefined>;
   retryOn401?: boolean;
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, auth = false, query, retryOn401 = true } = opts;
+  const { method = "GET", body, auth = false, companyAuth = false, query, retryOn401 = true } = opts;
 
   const url = new URL(BASE_URL + path);
   if (query) {
@@ -53,7 +58,10 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   }
 
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (auth) {
+  if (companyAuth) {
+    const token = getCompanyAccessToken();
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } else if (auth) {
     const token = getAccessToken();
     if (token) headers["Authorization"] = `Bearer ${token}`;
   }
@@ -66,12 +74,20 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   });
 
   // Transparently refresh once on a 401, then replay the original request.
-  if (res.status === 401 && auth && retryOn401) {
-    const refreshed = await tryRefresh();
-    if (refreshed) {
-      return request<T>(path, { ...opts, retryOn401: false });
+  if (res.status === 401 && retryOn401) {
+    if (companyAuth) {
+      const refreshed = await tryCompanyRefresh();
+      if (refreshed) {
+        return request<T>(path, { ...opts, retryOn401: false });
+      }
+      clearCompanyTokens();
+    } else if (auth) {
+      const refreshed = await tryRefresh();
+      if (refreshed) {
+        return request<T>(path, { ...opts, retryOn401: false });
+      }
+      clearTokens();
     }
-    clearTokens();
   }
 
   const envelope = (await res.json()) as ApiEnvelope<T>;
@@ -148,6 +164,35 @@ async function tryRefresh(): Promise<boolean> {
   return refreshInFlight;
 }
 
+let companyRefreshInFlight: Promise<boolean> | null = null;
+
+async function tryCompanyRefresh(): Promise<boolean> {
+  if (companyRefreshInFlight) return companyRefreshInFlight;
+  const refreshToken = getCompanyRefreshToken();
+  if (!refreshToken) return false;
+
+  companyRefreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/companies/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      const env = (await res.json()) as ApiEnvelope<TokenPair>;
+      if (res.ok && env.success && env.data) {
+        storeCompanyTokens(env.data);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    } finally {
+      companyRefreshInFlight = null;
+    }
+  })();
+  return companyRefreshInFlight;
+}
+
 export interface PresignResult {
   upload_url: string;
   public_url: string;
@@ -197,6 +242,7 @@ export const api = {
     request<AuthResponse>("/auth/github", { method: "POST", body: { code } }),
 
   // Users
+  getMe: () => request<User>("/users/me", { auth: true }),
   getUser: (username: string) => request<User>(`/users/${username}`),
   updateMe: (input: Partial<User>) =>
     request<User>("/users/me", { method: "PATCH", body: input, auth: true }),
@@ -239,9 +285,9 @@ export const api = {
     request<CompanyAuthResponse>("/companies/login", { method: "POST", body: { email, password } }),
   companyRefresh: (refresh_token: string) =>
     request<TokenPair>("/companies/refresh", { method: "POST", body: { refresh_token } }),
-  getCompanyMe: () => request<Company>("/companies/me", { auth: true }),
+  getCompanyMe: () => request<Company>("/companies/me", { companyAuth: true }),
   updateCompanyMe: (input: Partial<Company>) =>
-    request<Company>("/companies/me", { method: "PATCH", body: input, auth: true }),
+    request<Company>("/companies/me", { method: "PATCH", body: input, companyAuth: true }),
   getCompanyBySlug: (slug: string) => request<Company>(`/companies/${slug}`),
 
   // Admin

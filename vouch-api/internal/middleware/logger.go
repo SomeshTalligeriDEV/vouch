@@ -20,6 +20,7 @@ func Logger(log zerolog.Logger) fiber.Handler {
 		} else if status >= 400 {
 			ev = log.Warn()
 		}
+		reqID, _ := c.Locals("requestID").(string)
 		ev.
 			Str("method", c.Method()).
 			Str("path", c.Path()).
@@ -27,6 +28,7 @@ func Logger(log zerolog.Logger) fiber.Handler {
 			Dur("latency", time.Since(start)).
 			Str("ip", c.IP()).
 			Str("user_id", UserID(c)).
+			Str("request_id", reqID).
 			Msg("request")
 		return err
 	}

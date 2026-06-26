@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { api } from "@/lib/api";
-import { storeTokens } from "@/lib/auth";
+import { storeCompanyTokens } from "@/lib/auth";
 
 export default function CompanyLoginPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function CompanyLoginPage() {
     setError(null);
     try {
       const res = await api.companyLogin(email, password);
-      storeTokens(res.tokens);
+      storeCompanyTokens(res.tokens);
       localStorage.setItem("vouch_company", JSON.stringify(res.company));
       router.replace("/company/dashboard");
     } catch {
