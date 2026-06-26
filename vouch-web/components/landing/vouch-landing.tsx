@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import Script from "next/script";
 
 import { DESIGN_HTML, DESIGN_KEYFRAMES } from "./design";
+import ProfileCard from "./ProfileCard";
+
+// Avatar for the hero ProfileCard. Remote portrait; degrades gracefully via
+// the component's onError handler if it can't load.
+const HERO_AVATAR =
+  "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=600&auto=format&fit=crop";
 
 // Renders the imported Claude Design (Vouch.dc.html) and wires up its
 // interactions: hover micro-effects, FAQ toggles, scroll reveals, the score
@@ -18,10 +25,42 @@ declare global {
 
 export function VouchLanding() {
   const ref = useRef<HTMLDivElement>(null);
+  const pcRootRef = useRef<Root | null>(null);
 
   useEffect(() => {
     const root = ref.current?.querySelector<HTMLElement>("[data-vouch-root]");
     if (!root) return;
+
+    // Swap the static stats card for the React Bits ProfileCard. The card sits
+    // inside markup React owns via innerHTML, so we mount an independent React
+    // root into the emptied slot rather than a portal (decoupled reconciler).
+    const heroCard = root.querySelector<HTMLElement>("[data-hero-card]");
+    if (heroCard && !pcRootRef.current) {
+      heroCard.innerHTML = "";
+      heroCard.style.removeProperty("will-change");
+      const pcRoot = createRoot(heroCard);
+      pcRoot.render(
+        <ProfileCard
+          name="Maya Okonkwo"
+          title="Builder · 842 · B-Rank"
+          handle="mayaships"
+          status="Shipping"
+          contactText="View profile"
+          avatarUrl={HERO_AVATAR}
+          miniAvatarUrl={HERO_AVATAR}
+          showUserInfo
+          enableTilt
+          enableMobileTilt={false}
+          behindGlowColor="rgba(200, 242, 76, 0.55)"
+          behindGlowSize="50%"
+          innerGradient="linear-gradient(145deg,#14181b 0%,#C8F24C33 100%)"
+          onContactClick={() => {
+            window.location.href = "/builder/mayaships";
+          }}
+        />,
+      );
+      pcRootRef.current = pcRoot;
+    }
 
     // --- hover micro-interactions (style-hover="...") ---
     const hoverEls = root.querySelectorAll<HTMLElement>("[style-hover]");
@@ -143,6 +182,10 @@ export function VouchLanding() {
       cleanups.forEach((c) => c());
       obs.disconnect();
       clearTimeout(toastTimer);
+      // Defer to avoid unmounting a root during React's render phase.
+      const pcRoot = pcRootRef.current;
+      pcRootRef.current = null;
+      if (pcRoot) setTimeout(() => pcRoot.unmount(), 0);
     };
   }, []);
 
