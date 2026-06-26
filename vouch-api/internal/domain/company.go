@@ -33,6 +33,27 @@ type Company struct {
 	UpdatedAt    time.Time   `bson:"updated_at" json:"updated_at"`
 }
 
+// DisplaySize returns a human-readable label for the company's headcount range.
+func (c *Company) DisplaySize() string {
+	switch c.Size {
+	case CompanySizeSolo:
+		return "Solo founder"
+	case CompanySizeSmall:
+		return "2–10 people"
+	case CompanySizeMid:
+		return "11–50 people"
+	case CompanySizeLarge:
+		return "51–200 people"
+	case CompanySizeEnterprise:
+		return "200+ people"
+	default:
+		return string(c.Size)
+	}
+}
+
+// HasWebsite reports whether the company has a public website set.
+func (c *Company) HasWebsite() bool { return c.Website != "" }
+
 // CompanyRepository abstracts persistence for companies.
 type CompanyRepository interface {
 	Create(ctx context.Context, c *Company) error
