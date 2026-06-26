@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { api } from "@/lib/api";
-import { storeCompanyTokens } from "@/lib/auth";
+import { useCompanyAuth } from "@/store/company";
 
 const SIZES = [
   { value: "1", label: "Solo founder" },
@@ -17,6 +16,7 @@ const SIZES = [
 
 export default function CompanyRegisterPage() {
   const router = useRouter();
+  const register = useCompanyAuth((s) => s.register);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,12 +29,14 @@ export default function CompanyRegisterPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      const res = await api.companyRegister(form);
-      storeCompanyTokens(res.tokens);
-      localStorage.setItem("vouch_company", JSON.stringify(res.company));
+      await register(form);
       router.replace("/company/dashboard");
     } catch (err) {
       setError((err as Error).message);
@@ -43,16 +45,16 @@ export default function CompanyRegisterPage() {
     }
   };
 
-  const field = (label: string, key: keyof typeof form, type = "text", placeholder = "") => (
+  const field = (label: string, key: keyof typeof form, type = "text", placeholder = "", required = true) => (
     <label className="block">
-      <span className="mb-1 block text-sm text-ink/60">{label}</span>
+      <span className="mb-1 block text-sm font-medium">{label}</span>
       <input
         type={type}
         value={form[key]}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })}
         placeholder={placeholder}
-        required={key !== "website"}
-        className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
+        required={required}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
       />
     </label>
   );
@@ -61,24 +63,24 @@ export default function CompanyRegisterPage() {
     <div className="mx-auto max-w-md py-12 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Create a company account</h1>
-        <p className="mt-1 text-sm text-ink/60">
+        <p className="mt-1 text-sm text-muted-foreground">
           Post real problems with budgets. Builders ship solutions and you get
           your first paying customer.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="card space-y-4">
+      <form onSubmit={onSubmit} className="rounded-xl border border-border bg-card p-6 space-y-4">
         {field("Company name *", "name", "text", "Acme Inc.")}
         {field("Work email *", "email", "email", "you@company.com")}
         {field("Password *", "password", "password", "Min 8 characters")}
-        {field("Website", "website", "url", "https://company.com")}
+        {field("Website", "website", "url", "https://company.com", false)}
 
         <label className="block">
-          <span className="mb-1 block text-sm text-ink/60">Company size</span>
+          <span className="mb-1 block text-sm font-medium">Company size</span>
           <select
             value={form.size}
             onChange={(e) => setForm({ ...form, size: e.target.value })}
-            className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           >
             {SIZES.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
@@ -86,22 +88,26 @@ export default function CompanyRegisterPage() {
           </select>
         </label>
 
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        <button
+          type="submit"
+          disabled={loading || !form.name || !form.email || !form.password}
+          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+        >
           {loading ? "Creating account…" : "Create account"}
         </button>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
 
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/company/login" className="text-accent-ink underline">
+        <Link href="/company/login" className="text-primary hover:underline">
           Sign in
         </Link>
       </p>
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-muted-foreground">
         Are you a builder?{" "}
-        <Link href="/login" className="text-accent-ink underline">
+        <Link href="/login" className="text-primary hover:underline">
           Sign in with GitHub
         </Link>
       </p>

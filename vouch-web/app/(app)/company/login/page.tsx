@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-import { api } from "@/lib/api";
-import { storeCompanyTokens } from "@/lib/auth";
+import { useCompanyAuth } from "@/store/company";
 
 export default function CompanyLoginPage() {
   const router = useRouter();
+  const login = useCompanyAuth((s) => s.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,9 +19,7 @@ export default function CompanyLoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.companyLogin(email, password);
-      storeCompanyTokens(res.tokens);
-      localStorage.setItem("vouch_company", JSON.stringify(res.company));
+      await login(email, password);
       router.replace("/company/dashboard");
     } catch {
       setError("Invalid email or password.");
@@ -34,47 +32,53 @@ export default function CompanyLoginPage() {
     <div className="mx-auto max-w-sm py-16 space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold">Company sign in</h1>
-        <p className="mt-1 text-sm text-ink/60">Sign in to your company account</p>
+        <p className="mt-1 text-sm text-muted-foreground">Sign in to your company account</p>
       </div>
 
-      <form onSubmit={onSubmit} className="card space-y-4">
+      <form onSubmit={onSubmit} className="rounded-xl border border-border bg-card p-6 space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm text-ink/60">Work email</span>
+          <span className="mb-1 block text-sm font-medium">Work email</span>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
+            autoComplete="email"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm text-ink/60">Password</span>
+          <span className="mb-1 block text-sm font-medium">Password</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none focus:border-accent"
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
         </label>
 
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        <button
+          type="submit"
+          disabled={loading || !email || !password}
+          className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+        >
           {loading ? "Signing in…" : "Sign in"}
         </button>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
       </form>
 
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-muted-foreground">
         No account yet?{" "}
-        <Link href="/company/register" className="text-accent-ink underline">
+        <Link href="/company/register" className="text-primary hover:underline">
           Create one
         </Link>
       </p>
-      <p className="text-center text-sm text-ink/50">
+      <p className="text-center text-sm text-muted-foreground">
         Builder?{" "}
-        <Link href="/login" className="text-accent-ink underline">
+        <Link href="/login" className="text-primary hover:underline">
           Sign in with GitHub
         </Link>
       </p>
