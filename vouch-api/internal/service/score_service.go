@@ -121,6 +121,21 @@ func (s *ScoreService) EnqueueRecalc(ctx context.Context, builderID string) erro
 	return nil
 }
 
+// LeaderboardEntryForBuilder returns a single enriched entry for one builder.
+func (s *ScoreService) LeaderboardEntryForBuilder(ctx context.Context, builderID string) (*LeaderboardEntry, error) {
+	sc, err := s.scores.GetByBuilderID(ctx, builderID)
+	if err != nil {
+		return nil, err
+	}
+	entry := &LeaderboardEntry{BuilderScore: sc}
+	if u, err := s.users.GetByID(ctx, builderID); err == nil {
+		entry.Username = u.Username
+		entry.Name = u.Name
+		entry.AvatarURL = u.AvatarURL
+	}
+	return entry, nil
+}
+
 // LeaderboardEntry enriches a score with the builder's public profile fields.
 type LeaderboardEntry struct {
 	*domain.BuilderScore

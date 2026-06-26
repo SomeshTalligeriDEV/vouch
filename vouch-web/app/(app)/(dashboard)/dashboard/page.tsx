@@ -7,7 +7,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { StripeConnect } from "@/components/builder/stripe-connect";
 import { ScoreBadge } from "@/components/score/score-badge";
 import { api } from "@/lib/api";
-import { useLeaderboard } from "@/hooks";
+import { useLeaderboard, useLeaderboardSSE } from "@/hooks";
 
 function StripeReturn() {
   const params = useSearchParams();
@@ -57,6 +57,7 @@ function StripeReturn() {
 
 export default function DashboardPage() {
   const { data: leaders, isLoading } = useLeaderboard(10);
+  useLeaderboardSSE(); // subscribe to real-time updates
 
   return (
     <div className="space-y-8">

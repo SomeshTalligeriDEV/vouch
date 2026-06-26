@@ -4,10 +4,12 @@ import (
 	"context"
 	"time"
 
+	"os"
+
 	"github.com/hibiken/asynq"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"os"
 
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/config"
 	"github.com/SomeshTalligeriDEV/vouch-api/internal/external"
@@ -37,6 +39,13 @@ func main() {
 		logger.Fatal().Err(err).Msg("asynq redis uri parse failed")
 	}
 
+	redisOpt, err := redis.ParseURL(cfg.RedisURL)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("redis url parse failed")
+	}
+	rdb := redis.NewClient(redisOpt)
+	defer rdb.Close()
+
 	// Self-enqueuer so services can chain follow-up tasks.
 	enqueuer := worker.NewEnqueuer(asynqOpt)
 	defer enqueuer.Close()
@@ -56,7 +65,7 @@ func main() {
 	stripeSvc := service.NewStripeService(userRepo, stripeRepo, stripeClient, enqueuer)
 	notificationSvc := service.NewNotificationService(userRepo, problemRepo, resendClient, cfg.AppURL)
 
-	scoreWorker := worker.NewScoreWorker(scoreSvc)
+	scoreWorker := worker.NewScoreWorker(scoreSvc, rdb)
 	stripeWorker := worker.NewStripeWorker(stripeSvc)
 	emailWorker := worker.NewEmailWorker(notificationSvc)
 

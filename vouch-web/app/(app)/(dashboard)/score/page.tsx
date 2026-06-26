@@ -4,12 +4,13 @@ import { useState } from "react";
 
 import { ScoreBreakdown } from "@/components/score/score-breakdown";
 import { api } from "@/lib/api";
-import { useScore } from "@/hooks";
+import { useScore, useScoreSSE } from "@/hooks";
 
 export default function ScorePage() {
   const [username, setUsername] = useState("");
   const [submitted, setSubmitted] = useState("");
   const { data: score, isLoading, isError } = useScore(submitted);
+  useScoreSSE(submitted); // auto-refresh on real-time score updates
   const [recalcMsg, setRecalcMsg] = useState<string | null>(null);
 
   const recalc = async () => {

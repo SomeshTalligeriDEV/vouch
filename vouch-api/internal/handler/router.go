@@ -39,6 +39,12 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok"})
 	})
+	app.Get("/ready", func(c *fiber.Ctx) error {
+		if err := d.Redis.Ping(c.UserContext()).Err(); err != nil {
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"status": "not_ready", "error": "redis"})
+		}
+		return c.JSON(fiber.Map{"status": "ready"})
+	})
 
 	v1 := app.Group("/api/v1")
 
@@ -83,4 +89,10 @@ func Register(app *fiber.App, h Handlers, d Deps) {
 	// Uploads
 	uploads := v1.Group("/uploads")
 	uploads.Post("/presign", auth, mutationLimiter, h.Upload.Presign)
+
+	// SSE — real-time streams (no auth required; score data is public)
+	sse := NewSSEHandler(d.Redis)
+	sseGrp := v1.Group("/sse")
+	sseGrp.Get("/leaderboard", sse.LeaderboardStream)
+	sseGrp.Get("/scores/:username", sse.ScoreStream)
 }

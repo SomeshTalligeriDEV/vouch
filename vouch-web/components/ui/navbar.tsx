@@ -42,7 +42,7 @@ export function Navbar() {
             href={githubOAuthURL()}
             className="ml-2 rounded-full bg-accent px-4 py-2 font-bold text-ink shadow-hard transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-hard-lg"
           >
-            Get access
+            Sign in
           </a>
         </div>
       </nav>

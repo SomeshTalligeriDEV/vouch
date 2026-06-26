@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   useMutation,
   useQuery,
@@ -7,6 +8,9 @@ import {
 } from "@tanstack/react-query";
 
 import { api, type ProblemFilters, type ProjectFilters } from "@/lib/api";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
 
 // Projects
 export function useProjects(filters: ProjectFilters = {}) {
@@ -100,4 +104,35 @@ export function useReviews(projectId: string) {
     queryFn: () => api.listReviews(projectId),
     enabled: !!projectId,
   });
+}
+
+// useLeaderboardSSE subscribes to real-time leaderboard updates via SSE and
+// invalidates the React Query cache whenever the server publishes a new event.
+export function useLeaderboardSSE() {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const url = BASE_URL.replace("/api/v1", "") + "/api/v1/sse/leaderboard";
+    const es = new EventSource(url);
+    es.addEventListener("leaderboard", () => {
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+    });
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [qc]);
+}
+
+// useScoreSSE subscribes to real-time score updates for a specific builder.
+export function useScoreSSE(username: string) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!username) return;
+    const url = `${BASE_URL.replace("/api/v1", "")}/api/v1/sse/scores/${username}`;
+    const es = new EventSource(url);
+    es.addEventListener("score", () => {
+      qc.invalidateQueries({ queryKey: ["score", username] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
+    });
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [username, qc]);
 }

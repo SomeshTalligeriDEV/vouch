@@ -4,7 +4,7 @@ import { use } from "react";
 
 import { ScoreBadge } from "@/components/score/score-badge";
 import { ScoreBreakdown } from "@/components/score/score-breakdown";
-import { useBuilder, useScore } from "@/hooks";
+import { useBuilder, useScore, useScoreSSE } from "@/hooks";
 
 export default function BuilderProfilePage({
   params,
@@ -14,6 +14,7 @@ export default function BuilderProfilePage({
   const { username } = use(params);
   const { data: builder, isLoading, isError } = useBuilder(username);
   const { data: score } = useScore(username);
+  useScoreSSE(username);
 
   if (isLoading) return <p className="text-ink/60">Loading builder…</p>;
   if (isError || !builder)

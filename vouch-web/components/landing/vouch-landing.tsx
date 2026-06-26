@@ -6,6 +6,7 @@ import Script from "next/script";
 
 import { DESIGN_HTML, DESIGN_KEYFRAMES } from "./design";
 import ProfileCard from "./ProfileCard";
+import { githubOAuthURL } from "@/lib/utils";
 
 // Avatar for the hero ProfileCard. Remote portrait; degrades gracefully via
 // the component's onError handler if it can't load.
@@ -88,26 +89,28 @@ export function VouchLanding() {
       cleanups.push(() => d.removeEventListener("toggle", handler));
     });
 
-    // --- waitlist form -> toast ---
+    // --- sign-in CTA buttons → GitHub OAuth ---
+    const oauthURL = githubOAuthURL();
+    root.querySelectorAll<HTMLButtonElement>("button").forEach((btn) => {
+      const text = btn.textContent?.trim().toLowerCase() ?? "";
+      if (text.includes("sign in") || text.includes("github")) {
+        const handler = (e: Event) => {
+          e.preventDefault();
+          window.location.href = oauthURL;
+        };
+        btn.addEventListener("click", handler);
+        cleanups.push(() => btn.removeEventListener("click", handler));
+      }
+    });
+
+    // --- waitlist form → redirect to GitHub OAuth (no local storage) ---
     const form = root.querySelector<HTMLFormElement>("[data-waitlist-form]");
-    const input = root.querySelector<HTMLInputElement>("[data-waitlist-input]");
     const toast = root.querySelector<HTMLElement>("[data-toast]");
-    let toastTimer: ReturnType<typeof setTimeout>;
+    let toastTimer: ReturnType<typeof setTimeout> | undefined;
     if (form) {
       const onSubmit = (e: Event) => {
         e.preventDefault();
-        if (!input?.value) return;
-        try {
-          localStorage.setItem("vouch_waitlist_email", input.value);
-        } catch {
-          /* ignore */
-        }
-        input.value = "";
-        if (toast) {
-          toast.hidden = false;
-          clearTimeout(toastTimer);
-          toastTimer = setTimeout(() => (toast.hidden = true), 3600);
-        }
+        window.location.href = oauthURL;
       };
       form.addEventListener("submit", onSubmit);
       cleanups.push(() => form.removeEventListener("submit", onSubmit));
