@@ -44,6 +44,18 @@ type ProblemFilter struct {
 	SortBy    string // "upvotes", "budget", "recent"
 }
 
+// IsOpen reports whether the problem is still available to be claimed.
+func (p *Problem) IsOpen() bool { return p.Status == ProblemStatusOpen }
+
+// IsClaimed reports whether a builder has taken ownership of this problem.
+func (p *Problem) IsClaimed() bool { return p.Status == ProblemStatusClaimed }
+
+// IsShipped reports whether the problem has been resolved.
+func (p *Problem) IsShipped() bool { return p.Status == ProblemStatusShipped }
+
+// IsPostedBy reports whether the given user is the poster of this problem.
+func (p *Problem) IsPostedBy(userID string) bool { return p.PosterID == userID }
+
 // HasUpvoted reports whether the given user already upvoted this problem.
 func (p *Problem) HasUpvoted(userID string) bool {
 	for _, id := range p.UpvotedBy {
